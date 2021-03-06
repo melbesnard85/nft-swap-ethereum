@@ -1,2 +1,2 @@
-# navi-nft-ethereum
-SmartContract ERC-721 for NAVI NFT 
+# nft-swap-ethereum
+SmartContract ERC-721 for DMarket NFT Swap
