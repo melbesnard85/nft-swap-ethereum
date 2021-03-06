@@ -1,0 +1,28 @@
+{
+  "name": "nft-swap-ethereum",
+  "version": "1.0.0",
+  "description": "SmartContract ERC-721 for DMarket NFT Swap",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/dmarket/nft-swap-ethereum.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/dmarket/nft-swap-ethereum/issues"
+  },
+  "homepage": "https://github.com/dmarket/nft-swap-ethereum#readme",
+  "devDependencies": {
+    "@nomiclabs/hardhat-ethers": "^2.0.1",
+    "@nomiclabs/hardhat-waffle": "^2.0.1",
+    "chai": "^4.3.3",
+    "ethereum-waffle": "^3.3.0",
+    "ethers": "^5.0.31",
+    "hardhat": "^2.1.1"
+  }
+}
