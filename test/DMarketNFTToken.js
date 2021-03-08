@@ -8,6 +8,7 @@ describe("Token contract", function() {
     let minter;
     let addr1;
     let addr2;
+    let exchanger;
     let addrs;
     const ADMIN_ROLE = "0x0000000000000000000000000000000000000000000000000000000000000000";
     const MINT_ROLE = "0x9f2df0fed2c77648de5860a4cc508cd0818c85b8b8a1ab4ceeef8d981c8956a6";
@@ -18,7 +19,7 @@ describe("Token contract", function() {
     beforeEach(async function () {
         // Get the ContractFactory and Signers here.
         DMarketNFTSwap = await ethers.getContractFactory("DMarketNFTToken");
-        [creator, owner, minter, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [creator, owner, minter, addr1, addr2, exchanger, ...addrs] = await ethers.getSigners();
 
         // To deploy our contract, we just have to call Token.deploy() and await
         // for it to be deployed(), which happens onces its transaction has been
@@ -265,6 +266,51 @@ describe("Token contract", function() {
                 expect(true).equal(false);
             } catch (e) {
                 expect(true).equal(e.toString().includes(errMsg));
+            }
+        });
+    });
+    describe("approve", async function () {
+        it("positive case", async function () {
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
+            await hardhatDMarketNFTSwap.connect(addr1).approve(addr2.address, 1);
+            await hardhatDMarketNFTSwap.connect(addr2).transferFrom(addr1.address, addr2.address, 1);
+            expect(addr2.address).equal(await hardhatDMarketNFTSwap.ownerOf(1));
+        });
+        it("try not owner token set opprove", async function () {
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
+            try {
+                await hardhatDMarketNFTSwap.approve(addr2.address, 1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("ERC721: approve caller is not owner nor approved for all"));
+            }
+        });
+        it("set approval for all", async function () {
+            await hardhatDMarketNFTSwap.connect(addr1).setApprovalForAll(exchanger.address, true);
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
+            await hardhatDMarketNFTSwap.connect(exchanger).transferFrom(addr1.address, addr2.address, 1);
+            expect(addr2.address).equal(await hardhatDMarketNFTSwap.ownerOf(1));
+        });
+        it("try after set approval for all", async function () {
+            await hardhatDMarketNFTSwap.connect(addr1).setApprovalForAll(addr2.address, true);
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
+            try {
+                await hardhatDMarketNFTSwap.approve(addr2.address, 1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("ERC721: approve caller is not owner nor approved for all"));
+            }
+        });
+        it("try to transferFrom second time without approve", async function () {
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
+            await hardhatDMarketNFTSwap.connect(addr1).approve(addr2.address, 1);
+            await hardhatDMarketNFTSwap.connect(addr2).transferFrom(addr1.address, addr2.address, 1);
+            await hardhatDMarketNFTSwap.connect(addr2).transferFrom(addr2.address, addr1.address, 1);
+            try {
+                await hardhatDMarketNFTSwap.connect(addr2).transferFrom(addr1.address, addr2.address, 1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("ERC721: transfer caller is not owner nor approved"));
             }
         });
     });
