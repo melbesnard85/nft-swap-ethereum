@@ -83,44 +83,59 @@ describe("Token contract", function() {
             expect(addr2.address).equal(await hardhatDMarketNFTSwap.ownerOf(102));
         });
         it("mintTokenBatch must be the same number of receivers/tokenIDs", async function () {
-            let getError = false;
+            const errMsg = "DMarketNFTToken: must be the same number of receivers/tokenIDs";
             try {
                 await hardhatDMarketNFTSwap.mintTokenBatch([addr1.address], [101, 102]);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("DMarketNFTToken: must be the same number of receivers/tokenIDs");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
-            getError = false;
+
             try {
                 await hardhatDMarketNFTSwap.mintTokenBatch([addr1.address, addr2.address], [101]);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("DMarketNFTToken: must be the same number of receivers/tokenIDs");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
         });
         it("mintTokenBatch token already minted", async function () {
             await hardhatDMarketNFTSwap.mintTokenBatch([addr1.address, addr2.address], [101, 102]);
-            let getError = false;
+            const errMsg = "ERC721: token already minted";
+
             try {
                 await hardhatDMarketNFTSwap.mintTokenBatch([addr1.address, addr2.address], [101, 102]);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("ERC721: token already minted");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
-            getError = false;
+
             try {
                 await hardhatDMarketNFTSwap.mintTokenBatch([addr1.address, addr2.address], [101, 103]);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("ERC721: token already minted");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
-            getError = false;
+
             try {
                 await hardhatDMarketNFTSwap.mintTokenBatch([addr1.address, addr2.address], [201, 201]);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("ERC721: token already minted");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
+        });
+    });
+    describe("Burn", async function () {
+        it("token owner burn asset", async function () {
+            const errMsg = "ERC721: owner query for nonexistent token";
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
+            expect(addr1.address).equal(await hardhatDMarketNFTSwap.ownerOf(1));
+            await hardhatDMarketNFTSwap.connect(addr1).burn(1);
+            try {
+                await hardhatDMarketNFTSwap.ownerOf(1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes(errMsg));
+            }
         });
     });
     describe("Roles", async function () {
@@ -141,15 +156,15 @@ describe("Token contract", function() {
             expect(false).equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
         });
         it("renounceMinter role by owner", async function () {
+            const errMsg = "AccessControl: can only renounce roles for self";
             await hardhatDMarketNFTSwap.addMinter(addr2.address);
             expect(true).equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, addr2.address));
-            let getError = false;
             try {
                 await hardhatDMarketNFTSwap.connect(owner).renounceMinter(addr2.address);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("AccessControl: can only renounce roles for self");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
         });
     });
 
@@ -161,16 +176,16 @@ describe("Token contract", function() {
             expect(addr2.address).equal(await hardhatDMarketNFTSwap.ownerOf(11));
         });
         it("transferFrom nonexistent token", async function () {
-            let getError = false
+            const errMsg = "ERC721: operator query for nonexistent token";
             try {
                 await hardhatDMarketNFTSwap.connect(addr1).transferFrom(addr1.address, addr2.address, 11);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("ERC721: operator query for nonexistent token");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
         });
         it("safeTransferFrom without bytes ", async function () {
-            await hardhatDMarketNFTSwap.mintToken(addr1.address, 11)
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 11);
             expect(addr1.address).equal(await hardhatDMarketNFTSwap.ownerOf(11));
 
             const contract = await hardhatDMarketNFTSwap.connect(addr1);
@@ -179,14 +194,14 @@ describe("Token contract", function() {
             expect(addr2.address).equal(await hardhatDMarketNFTSwap.ownerOf(11));
         });
         it("safeTransferFrom without bytes nonexistent token", async function () {
-            let getError = false
+            const errMsg = "ERC721: operator query for nonexistent token";
             try {
                 const contract = await hardhatDMarketNFTSwap.connect(addr1);
                 await contract['safeTransferFrom(address,address,uint256)'](addr1.address, addr2.address, 11);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("ERC721: operator query for nonexistent token");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
         });
         it("safeTransferFrom with bytes", async function () {
             await hardhatDMarketNFTSwap.mintToken(addr1.address, 11);
@@ -198,14 +213,14 @@ describe("Token contract", function() {
             expect(addr2.address).equal(await hardhatDMarketNFTSwap.ownerOf(11));
         });
         it("safeTransferFrom with bytes nonexistent token", async function () {
-            let getError = false
+            const errMsg = "ERC721: operator query for nonexistent token";
             try {
                 const contract = await hardhatDMarketNFTSwap.connect(addr1);
                 await contract['safeTransferFrom(address,address,uint256,bytes)'](addr1.address, addr2.address, 11, []);
+                expect(true).equal(false);
             } catch (e) {
-                getError = e.toString().includes("ERC721: operator query for nonexistent token");
+                expect(true).equal(e.toString().includes(errMsg));
             }
-            expect(true).equal(getError);
         });
     });
 });
