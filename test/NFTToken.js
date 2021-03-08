@@ -18,7 +18,7 @@ describe("Token contract", function() {
     beforeEach(async function () {
         // Get the ContractFactory and Signers here.
         DMarketNFTSwap = await ethers.getContractFactory("DMarketNFTToken");
-        [creator, owner, addr1, addr2, ...addrs] = await ethers.getSigners();
+        [creator, owner, minter, addr1, addr2, ...addrs] = await ethers.getSigners();
 
         // To deploy our contract, we just have to call Token.deploy() and await
         // for it to be deployed(), which happens onces its transaction has been
@@ -36,11 +36,69 @@ describe("Token contract", function() {
         it("should set the owner", async function() {
             expect(owner.address).to.equal(await hardhatDMarketNFTSwap.owner());
         });
-        it("should set the mint to creator address", async function() {
+        it("should set the mint_role for creator address", async function() {
             expect(true).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, creator.address));
         });
         it("owner isn't minter", async function() {
             expect(false).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, owner.address));
+        });
+    });
+
+    describe("Mint", async function () {
+        it("owner add Minter", async function (){
+            await hardhatDMarketNFTSwap.addMinter(minter.address);
+            expect(true).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
+        });
+        it("revokeMinter role", async function (){
+            await hardhatDMarketNFTSwap.addMinter(minter.address);
+            expect(true).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
+            await hardhatDMarketNFTSwap.revokeMinter(minter.address)
+            expect(false).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
+        });
+        it("renounceMinter role", async function () {
+            await hardhatDMarketNFTSwap.addMinter(addr2.address);
+            expect(true).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, addr2.address));
+            await hardhatDMarketNFTSwap.connect(addr2).renounceMinter(addr2.address);
+            expect(false).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
+        });
+        it("renounceMinter role by owner", async function () {
+            await hardhatDMarketNFTSwap.addMinter(addr2.address);
+            expect(true).to.equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, addr2.address));
+            let getError = false;
+            try {
+                await hardhatDMarketNFTSwap.connect(owner).renounceMinter(addr2.address);
+            } catch (e) {
+                getError = e.toString().includes("AccessControl: can only renounce roles for self");
+            }
+            expect(true).to.equal(getError);
+        });
+        it("creator mintToken to addr1", async function () {
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
+            expect(addr1.address).to.equal(await hardhatDMarketNFTSwap.ownerOf(1));
+        });
+        it("minter mintToken to addr2", async function () {
+            await hardhatDMarketNFTSwap.addMinter(minter.address);
+            await hardhatDMarketNFTSwap.connect(minter).mintToken(addr2.address, 2);
+            expect(addr2.address).to.equal(await hardhatDMarketNFTSwap.ownerOf(2));
+        });
+        it("failed mintToken", async function () {
+            let isFailed = false;
+            try {
+                await hardhatDMarketNFTSwap.connect(addr1).mintToken(addr2.address, 3);
+            } catch (e) {
+                isFailed = e.toString().includes("MinterAccess: Sender is not a minter")
+            }
+            expect(true).to.equal(isFailed)
+        });
+        it("already minted token", async function() {
+            await hardhatDMarketNFTSwap.mintToken(addr1.address, 10);
+            let alreadyMinted = false;
+            try {
+                await hardhatDMarketNFTSwap.mintToken(addr1.address, 10);
+            } catch (e) {
+                alreadyMinted = e.toString().includes("ERC721: token already minted");
+            }
+            expect(true).to.equal(alreadyMinted);
         });
     });
 });

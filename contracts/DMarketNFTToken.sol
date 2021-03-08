@@ -724,8 +724,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      * Emits a {Transfer} event.
      */
     function _safeTransfer(address from, address to, uint256 tokenID, bytes memory _data) internal virtual {
-        require(_checkOnERC721Received(from, to, tokenID, _data), "ERC721: transfer to non ERC721Receiver implementer");
         _transfer(from, to, tokenID);
+        require(_checkOnERC721Received(from, to, tokenID, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
     /**
@@ -772,8 +772,8 @@ contract ERC721 is Context, ERC165, IERC721, IERC721Metadata {
      * forwarded in {IERC721Receiver-onERC721Received} to contract recipients.
      */
     function _safeMint(address to, uint256 tokenID, bytes memory _data) internal virtual {
-        require(_checkOnERC721Received(address(0), to, tokenID, _data), "ERC721: transfer to non ERC721Receiver implementer");
         _mint(to, tokenID);
+        require(_checkOnERC721Received(address(0), to, tokenID, _data), "ERC721: transfer to non ERC721Receiver implementer");
     }
 
     /**
@@ -1065,7 +1065,7 @@ contract MinterAccess is Ownable, AccessControl {
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
 
     modifier onlyMinter {
-        require(hasRole(MINTER_ROLE, _msgSender()), "Sender is not a minter");
+        require(hasRole(MINTER_ROLE, _msgSender()), "MinterAccess: Sender is not a minter");
         _;
     }
 
