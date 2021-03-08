@@ -185,7 +185,7 @@ describe("Token contract", function() {
         });
     });
     describe("Roles", async function () {
-        it("owner add Minter", async function (){
+        it("admin add Minter", async function (){
             await hardhatDMarketNFTSwap.addMinter(minter.address);
             expect(true).equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
         });
@@ -212,6 +212,24 @@ describe("Token contract", function() {
                 expect(true).equal(e.toString().includes(errMsg));
             }
         });
+        it("try addMinter without ADMIN_ROLE", async function () {
+            await hardhatDMarketNFTSwap.renounceRole(ADMIN_ROLE, creator.address);
+            try {
+                await hardhatDMarketNFTSwap.addMinter(minter.address);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("AccessControl: sender must be an admin to grant"))
+            }
+        });
+        it("admin revoke admin", async function() {
+            await hardhatDMarketNFTSwap.revokeRole(ADMIN_ROLE, owner.address);
+            try {
+                await hardhatDMarketNFTSwap.connect(owner).addMinter(minter.address);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("AccessControl: sender must be an admin to grant"))
+            }
+        })
     });
 
     describe("Transfers", async function (){
@@ -269,7 +287,7 @@ describe("Token contract", function() {
             }
         });
     });
-    describe("approve", async function () {
+    describe("Approve", async function () {
         it("positive case", async function () {
             await hardhatDMarketNFTSwap.mintToken(addr1.address, 1);
             await hardhatDMarketNFTSwap.connect(addr1).approve(addr2.address, 1);
@@ -311,6 +329,37 @@ describe("Token contract", function() {
                 expect(true).equal(false);
             } catch (e) {
                 expect(true).equal(e.toString().includes("ERC721: transfer caller is not owner nor approved"));
+            }
+        });
+    });
+    describe("Ownership", async function () {
+        it("transferOwnership by owner", async function () {
+            await hardhatDMarketNFTSwap.connect(owner).transferOwnership(minter.address);
+            expect(minter.address).equal(await hardhatDMarketNFTSwap.owner());
+        });
+        it("transferOwnership by creator", async function () {
+            try {
+                await hardhatDMarketNFTSwap.transferOwnership(minter.address);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("Ownable: caller is not the owner"));
+            }
+        });
+        it("transferOwnership after renounceOwnership", async function () {
+            await hardhatDMarketNFTSwap.connect(owner).renounceOwnership();
+            try {
+                await hardhatDMarketNFTSwap.connect(owner).transferOwnership(owner.address);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("Ownable: caller is not the owner"));
+            }
+        });
+        it("bad renounceOwnership", async function () {
+            try {
+                await hardhatDMarketNFTSwap.renounceOwnership();
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("Ownable: caller is not the owner"));
             }
         });
     });
