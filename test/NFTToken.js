@@ -137,6 +137,51 @@ describe("Token contract", function() {
                 expect(true).equal(e.toString().includes(errMsg));
             }
         });
+        it("burn nonexistent token", async function () {
+            const errMsg = "ERC721: operator query for nonexistent token";
+            try {
+                await hardhatDMarketNFTSwap.burn(1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes(errMsg));
+            }
+        });
+        it("failed for creator", async function () {
+            await hardhatDMarketNFTSwap.addMinter(minter.address);
+            await hardhatDMarketNFTSwap.connect(minter).mintToken(addr1.address, 1);
+
+            const errMsg = "DMarketNFTToken: caller is not owner nor approved";
+            try {
+                await hardhatDMarketNFTSwap.burn(1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes(errMsg));
+            }
+        });
+        it("failed for minter", async function () {
+            await hardhatDMarketNFTSwap.addMinter(minter.address);
+            await hardhatDMarketNFTSwap.connect(minter).mintToken(addr1.address, 1);
+
+            const errMsg = "DMarketNFTToken: caller is not owner nor approved";
+            try {
+                await hardhatDMarketNFTSwap.connect(minter).burn(1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes(errMsg));
+            }
+        });
+        it("failed for owner", async function () {
+            await hardhatDMarketNFTSwap.addMinter(minter.address);
+            await hardhatDMarketNFTSwap.connect(minter).mintToken(addr1.address, 1);
+
+            const errMsg = "DMarketNFTToken: caller is not owner nor approved";
+            try {
+                await hardhatDMarketNFTSwap.connect(owner).burn(1);
+                expect(true).equal(false);
+            } catch (e) {
+                expect(true).equal(e.toString().includes(errMsg));
+            }
+        });
     });
     describe("Roles", async function () {
         it("owner add Minter", async function (){
@@ -146,7 +191,7 @@ describe("Token contract", function() {
         it("revokeMinter role", async function (){
             await hardhatDMarketNFTSwap.addMinter(minter.address);
             expect(true).equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
-            await hardhatDMarketNFTSwap.revokeMinter(minter.address)
+            await hardhatDMarketNFTSwap.revokeMinter(minter.address);
             expect(false).equal(await hardhatDMarketNFTSwap.hasRole(MINT_ROLE, minter.address));
         });
         it("renounceMinter role", async function () {
