@@ -229,7 +229,19 @@ describe("Token contract", function() {
             } catch (e) {
                 expect(true).equal(e.toString().includes("AccessControl: sender must be an admin to grant"))
             }
-        })
+        });
+        it("remove all admin", async function () {
+            await hardhatDMarketNFTSwap.revokeRole(ADMIN_ROLE, owner.address);
+            await hardhatDMarketNFTSwap.revokeRole(ADMIN_ROLE, creator.address);
+            expect(false).equal(await hardhatDMarketNFTSwap.hasRole(ADMIN_ROLE, owner.address))
+            expect(false).equal(await hardhatDMarketNFTSwap.hasRole(ADMIN_ROLE, creator.address))
+            try {
+                await hardhatDMarketNFTSwap.connect(owner).grantRole(ADMIN_ROLE, owner.address);
+                expect(false).equal(true);
+            } catch (e) {
+                expect(true).equal(e.toString().includes("AccessControl: sender must be an admin to grant"))
+            }
+        });
     });
 
     describe("Transfers", async function (){
